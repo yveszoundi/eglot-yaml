@@ -1,0 +1,37 @@
+#+TITLE: README
+
+* Overview
+This project is a set of functions for Java programming inside [[https://www.gnu.org/software/emacs/][Emacs]], using the [[https://github.com/redhat-developer/yaml-language-server][Redhat YAML Language Server]].
+The implementation leverages [[https://github.com/joaotavora/eglot][eglot]] (and its transient dependency [[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project.el]] for project management).
+
+|--------------------------------+--------------------------------------------------|
+| Function                       | Description                                      |
+|--------------------------------+--------------------------------------------------|
+| =eglot-yaml-schema-for-buffer= | Select a JSON schema for the current YAML buffer |
+|--------------------------------+--------------------------------------------------|
+
+* Dependencies
+- The only Emacs package dependencies are [[https://github.com/joaotavora/eglot][eglot]] and [[https://github.com/yoshiki/yaml-mode][yaml-mode]].
+- The [[https://github.com/redhat-developer/yaml-language-server][Redhat YAML Language Server]] needs to be installed and in your PATH environment variable.
+
+* Installation
+
+Copy the contents of /eglot-yaml.el/ to a new Emacs buffer and run the command =M-x package-install-from-buffer=.
+
+* Usage
+
+** Customization
+
+You can configure few settings to reflect your preferences via =M-x customize-group= (/eglot-yaml/).
+
+** Configuration
+
+Please find below a simple initialization of this package.
+
+#+begin_src elisp
+(eval-after-load 'eglot-yaml
+  (progn
+    (require 'eglot-yaml)
+    (add-hook 'yaml-mode-hook 'whitespace-mode)
+    '(eglot-yaml-init)))
+#+end_src
