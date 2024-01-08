@@ -58,16 +58,15 @@
 
 (defun eglot-yaml--schema-store-cache-list (schema-index-file)
   "Cache schemas URL for all available schema for a given catalog file."
-  (when (hash-table-empty-p eglot-yaml-schema-by-name)
-    (let* ((json-object-type 'hash-table)
-           (json-array-type  'list)
-           (json-key-type    'string)
-           (eglot-yaml-schema-catalog-text (eglot-yaml--file-to-string schema-index-file))
-           (yaml-schemas (gethash "schemas" (json-read-from-string eglot-yaml-schema-catalog-text))))
-      (dolist (yaml-schema yaml-schemas)
-        (let ((schema-name (gethash "name" yaml-schema))
-              (schema-url  (gethash "url" yaml-schema)))
-          (puthash schema-name schema-url eglot-yaml-schema-by-name))))))
+  (let* ((json-object-type 'hash-table)
+         (json-array-type  'list)
+         (json-key-type    'string)
+         (eglot-yaml-schema-catalog-text (eglot-yaml--file-to-string schema-index-file))
+         (yaml-schemas (gethash "schemas" (json-read-from-string eglot-yaml-schema-catalog-text))))
+    (dolist (yaml-schema yaml-schemas)
+      (let ((schema-name (gethash "name" yaml-schema))
+            (schema-url  (gethash "url" yaml-schema)))
+        (puthash schema-name schema-url eglot-yaml-schema-by-name)))))
 
 (defun eglot-yaml--buffer-whole-string (buffer)
   "Retrieve the text contents from an HTTP response BUFFER."
@@ -91,7 +90,7 @@
           (unless (file-exists-p eglot-yaml-schema-index)
             (url-copy-file eglot-yaml-schema-store-uri eglot-yaml-schema-index t))
 
-          (unless (hash-table-empty-p eglot-yaml-schema-by-name)
+          (when (hash-table-empty-p eglot-yaml-schema-by-name)
             (eglot-yaml--schema-store-cache-list eglot-yaml-schema-index))
 
           (let* ((selected-schema-name (completing-read "Select schema: "
