@@ -38,6 +38,6 @@ You can configure few settings to reflect your preferences via =M-x customize-gr
 
 - Associate =eglot= to =yaml= buffers: =(add-hook 'yaml-mode-hook (lambda () (eglot-ensure)))=
 - Once =eglot= is up and running for a given =yaml= buffer, invoke =M-x eglot-yaml-schema-for-buffer=
-  - You'll be prompted to a select a schema for =yaml= auto-completion
+  - You'll be prompted to select a schema for =yaml= auto-completion
   - You can then use the completion mechanism of your choice (=company-mode=, etc.)
 
