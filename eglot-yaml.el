@@ -1,9 +1,8 @@
 ;;; eglot-yaml.el --- YAML extension for the eglot LSP client  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021 Yves Zoundi
+;; Copyright (C) 2019-2024 Yves Zoundi
 
-;; Version: 1.2
-;; Package-Version: 20210619.2149
+;; Version: 1.3
 ;; Author: Yves Zoundi <yz at spam.me>
 ;; Maintainer: Yves Zoundi <yz at spam.me>
 ;; URL: https://github.com/yveszoundi/eglot-yaml
@@ -25,7 +24,7 @@
 
 ;;; Commentary:
 
-;; YAML extension for eglot
+;; YAML auto-completion helper for eglot based on few schemas.
 
 ;;
 ;;; Code:
@@ -37,17 +36,6 @@
   :prefix "eglot-yaml-"
   :group 'eglot)
 
-(defcustom eglot-yaml-language-server-executable "yaml-language-server"
-  "YAML language executable."
-  :type 'file
-  :group 'eglot-yaml)
-
-(defcustom eglot-yaml-language-server-arguments
-  '("--stdio")
-  "YAML language server startup arguments."
-  :type '(repeat string)
-  :group 'eglot-yaml)
-
 (defcustom eglot-yaml-schema-store-uri "https://www.schemastore.org/api/json/catalog.json"
   "Cache folder for YAML JSON schemas"
   :type 'string
@@ -57,8 +45,6 @@
   "Cache folder for YAML JSON schemas."
   :type 'string
   :group 'eglot-yaml)
-
-(defvar eglot-yaml-schemas  '((:yaml :schemas ())) "LSP YAML schemas settings.")
 
 (defvar eglot-yaml-schema-by-name #s(hash-table size 30 test equal) "YAML schema by name.")
 
@@ -71,6 +57,7 @@
     (buffer-string)))
 
 (defun eglot-yaml--schema-store-cache-list (schema-index-file)
+  "Cache schemas URL for all available schema for a given catalog file."
   (when (hash-table-empty-p eglot-yaml-schema-by-name)
     (let* ((json-object-type 'hash-table)
            (json-array-type  'list)
@@ -90,16 +77,22 @@
       (re-search-forward "^$")
       (buffer-substring-no-properties (point) (point-max)))))
 
+;;;###autoload
 (defun eglot-yaml-schema-for-buffer ()
   "Select a JSON schema for the current YAML buffer."
   (interactive)
-  (if (derived-mode-p 'yaml-mode)
+  (if (or (derived-mode-p 'yaml-mode)
+          (derived-mode-p 'yaml-ts-mode))
       (progn
         (let ((eglot-yaml-schema-index (expand-file-name "index" eglot-yaml-schema-cache-directory)))
+          (unless (file-exists-p eglot-yaml-schema-cache-directory)
+            (mkdir eglot-yaml-schema-cache-directory t))
+
           (unless (file-exists-p eglot-yaml-schema-index)
             (url-copy-file eglot-yaml-schema-store-uri eglot-yaml-schema-index t))
 
-          (eglot-yaml--schema-store-cache-list eglot-yaml-schema-index)
+          (unless (hash-table-empty-p eglot-yaml-schema-by-name)
+            (eglot-yaml--schema-store-cache-list eglot-yaml-schema-index))
 
           (let* ((selected-schema-name (completing-read "Select schema: "
                                                         (hash-table-keys eglot-yaml-schema-by-name)
@@ -113,32 +106,13 @@
             (unless (file-exists-p schema-uri-local-path)
               (url-copy-file selected-schema-uri schema-uri-local-path t))
 
-            (setq eglot-yaml-schemas (list
+            (let ((eglot-yaml-schemas (list
                                       (list :yaml
-                                            :schemas (nconc
-                                                      (list (intern (format ":%s" (eglot--path-to-uri schema-uri-local-path)))
-                                                            (buffer-file-name))
-                                                      (caddr (assoc :yaml eglot-yaml-schemas))))))
-
-            (setq-default eglot-workspace-configuration eglot-yaml-schemas)
-            (call-interactively 'eglot-signal-didChangeConfiguration))))
-    (user-error "Cannot only set YAML schema in yaml-mode.")))
-
-;;;###autoload
-(defun eglot-yaml-init ()
-  "Initialize the library for use with the Eclipse JDT language server."
-  (let ((yaml-lsp-server-path (executable-find eglot-yaml-language-server-executable)))
-    (if yaml-lsp-server-path
-        (progn
-          (unless (file-exists-p (expand-file-name eglot-yaml-schema-cache-directory))
-            (make-directory (expand-file-name eglot-yaml-schema-cache-directory) t))
-
-          (let ((yaml-language-server-command (cons eglot-yaml-language-server-executable
-                                                    eglot-yaml-language-server-arguments)))
-            (add-to-list 'eglot-server-programs `(yaml-mode . ,yaml-language-server-command))
-            (setq-default eglot-workspace-configuration eglot-yaml-schemas)
-            (add-hook 'yaml-mode-hook 'eglot-ensure)))
-      (user-error "Cannot find YAML LSP server! Please customize the variable eglot-yaml-language-server-executable."))))
+                                            :schemas  (list (intern (format ":%s" (eglot--path-to-uri schema-uri-local-path)))
+                                                            (buffer-file-name))))))
+            (setq eglot-workspace-configuration eglot-yaml-schemas)
+            (call-interactively 'eglot-signal-didChangeConfiguration)))))
+    (user-error "Cannot only set YAML schema in yaml-mode or yaml-ts-mode.")))
 
 (provide 'eglot-yaml)
 ;;; eglot-yaml.el ends here

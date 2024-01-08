@@ -1,8 +1,12 @@
 #+TITLE: README
 
 * Overview
-This project is a set of functions for Java programming inside [[https://www.gnu.org/software/emacs/][Emacs]], using the [[https://github.com/redhat-developer/yaml-language-server][Redhat YAML Language Server]].
+This project is a set of functions for obtaining smart =yaml= code completion inside [[https://www.gnu.org/software/emacs/][Emacs]], using the [[https://github.com/redhat-developer/yaml-language-server][Redhat YAML LSP Server]].
 The implementation leverages [[https://github.com/joaotavora/eglot][eglot]] (and its transient dependency [[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/project.el][project.el]] for project management).
+
+Smart code completion is enabled by selecting a schema from a pre-defined catalog:
+- The default schema catalog URI is https://www.schemastore.org/api/json/catalog.json
+- The default schema catalog URI is configurable via the variable =eglot-yaml-schema-store-uri=
 
 |--------------------------------+--------------------------------------------------|
 | Function                       | Description                                      |
@@ -11,8 +15,12 @@ The implementation leverages [[https://github.com/joaotavora/eglot][eglot]] (and
 |--------------------------------+--------------------------------------------------|
 
 * Dependencies
-- The only Emacs package dependencies are [[https://github.com/joaotavora/eglot][eglot]] and [[https://github.com/yoshiki/yaml-mode][yaml-mode]].
-- The [[https://github.com/redhat-developer/yaml-language-server][Redhat YAML Language Server]] needs to be installed and in your PATH environment variable.
+- The only Emacs package dependencies are [[https://github.com/joaotavora/eglot][eglot]] and [[https://github.com/yoshiki/yaml-mode][yaml-mode]] (or =yaml-ts-mode=).
+- The following is assumed:
+  - You're using the [[https://github.com/redhat-developer/yaml-language-server][Redhat YAML LSP Server]] for =yaml= files
+    - The installation needs [[https://nodejs.org/en][Node.js]] (its =npm= command)
+    - You can install the LSP server via the command: =npm i -g yaml-language-server=
+  - You've enabled =eglot= for =yaml= files (=yaml-mode= or =yaml-ts-mode=)
 
 * Installation
 
@@ -24,14 +32,10 @@ Copy the contents of /eglot-yaml.el/ to a new Emacs buffer and run the command =
 
 You can configure few settings to reflect your preferences via =M-x customize-group= (/eglot-yaml/).
 
-** Configuration
+** Invocation
 
-Please find below a simple initialization of this package.
+- Associate =eglot= to =yaml= buffers: =(add-hook 'yaml-mode-hook (lambda () (eglot-ensure)))=
+- Once =eglot= is up and running for a given =yaml= buffer, invoke =M-x eglot-yaml-schema-for-buffer=
+  - You'll be prompted to a select a schema for =yaml= auto-completion
+  - You can then use the completion mechanism of your choice (=company-mode=, =(completion-at-point)=, etc.)
 
-#+begin_src elisp
-(eval-after-load 'eglot-yaml
-  (progn
-    (require 'eglot-yaml)
-    (add-hook 'yaml-mode-hook 'whitespace-mode)
-    '(eglot-yaml-init)))
-#+end_src
