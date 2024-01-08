@@ -26,7 +26,7 @@ Smart code completion is enabled by selecting a schema from a pre-defined catalo
 
 Copy the contents of /eglot-yaml.el/ to a new Emacs buffer and run the command:
 
-=M-x package-install-from-buffer=.
+=M-x package-install-from-buffer=
 
 * Usage
 
