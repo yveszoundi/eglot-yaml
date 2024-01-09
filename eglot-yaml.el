@@ -3,11 +3,11 @@
 ;; Copyright (C) 2019-2024 Yves Zoundi
 
 ;; Version: 1.3
-;; Author: Yves Zoundi <yz at spam.me>
-;; Maintainer: Yves Zoundi <yz at spam.me>
+;; Author: Yves Zoundi <yves_zoundi@hotmail.com>
+;; Maintainer: Yves Zoundi <yves_zoundi@hotmail.com>
 ;; URL: https://github.com/yveszoundi/eglot-yaml
 ;; Keywords: convenience, languages
-;; Package-Requires: ((emacs "26.1") (eglot "1.0") (yaml-mode "0.0.15"))
+;; Package-Requires: ((emacs "26.1") (eglot "1.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,7 +24,14 @@
 
 ;;; Commentary:
 
-;; YAML auto-completion helper for eglot based on few schemas.
+;; Yaml extension for the eglot LSP client.
+;;
+;; Enable eglot for YAML buffers
+;; (add-hook 'yaml-mode-hook (lambda () (eglot-ensure)))
+;;
+;; Once eglot is up and running for a given YAML buffer, invoke "M-x eglot-yaml-schema-for-buffer"
+;; - You'll be prompted to select a schema for YAML auto-completion
+;; - You can then use the completion mechanism of your choice (company-mode, etc.)
 
 ;;
 ;;; Code:
@@ -67,14 +74,6 @@
       (let ((schema-name (gethash "name" yaml-schema))
             (schema-url  (gethash "url" yaml-schema)))
         (puthash schema-name schema-url eglot-yaml-schema-by-name)))))
-
-(defun eglot-yaml--buffer-whole-string (buffer)
-  "Retrieve the text contents from an HTTP response BUFFER."
-  (with-current-buffer buffer
-    (save-restriction
-      (widen)
-      (re-search-forward "^$")
-      (buffer-substring-no-properties (point) (point-max)))))
 
 ;;;###autoload
 (defun eglot-yaml-schema-for-buffer ()
